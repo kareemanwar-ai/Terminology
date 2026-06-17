@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق حفظ المصطلحات العلمية | Botany & Biology</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#10b981', // Emerald 500
+                        secondary: '#047857', // Emerald 700
+                        accent: '#f59e0b', // Amber 500
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Flashcard 3D flip animations */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        .card-transition {
+            transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #047857; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
+
+    <!-- Header / Navbar -->
+    <header class="bg-secondary text-white shadow-lg sticky top-0 z-50 relative">
+        <div class="container mx-auto px-4 py-4 flex flex-col items-center justify-center gap-4">
+            
+            <div class="flex items-center justify-center gap-3 w-full mt-2">
+                <i class="fa-solid fa-leaf text-3xl text-emerald-300"></i>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-wide">مدرب المصطلحات العلمية</h1>
+            </div>
+            
+            <!-- Navigation Tabs (Centered to avoid overlapping with canvas edges) -->
+            <nav class="flex flex-wrap justify-center gap-2 bg-emerald-800 p-1.5 rounded-xl shadow-inner w-full md:w-auto">
+                <button onclick="switchTab('study')" id="tab-study" class="nav-btn px-4 py-2 md:px-6 md:py-2.5 rounded-lg transition-all font-bold bg-white text-secondary shadow text-sm md:text-base flex-1 md:flex-none text-center hover:scale-105">
+                    <i class="fa-solid fa-book-open ml-2"></i>المراجعة
+                </button>
+                <button onclick="switchTab('flashcards')" id="tab-flashcards" class="nav-btn px-4 py-2 md:px-6 md:py-2.5 rounded-lg transition-all font-bold text-emerald-100 hover:text-white hover:bg-emerald-700 text-sm md:text-base flex-1 md:flex-none text-center hover:scale-105">
+                    <i class="fa-solid fa-clone ml-2"></i>البطاقات
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="nav-btn px-4 py-2 md:px-6 md:py-2.5 rounded-lg transition-all font-bold text-emerald-100 hover:text-white hover:bg-emerald-700 text-sm md:text-base flex-1 md:flex-none text-center hover:scale-105">
+                    <i class="fa-solid fa-gamepad ml-2"></i>الاختبار
+                </button>
+            </nav>
+
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto px-4 py-8 flex-grow">
+        
+        <!-- SECTION 1: STUDY LIST -->
+        <section id="section-study" class="animate-fade-in block">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-secondary mb-2">قائمة المراجعة الشاملة</h2>
+                <p class="text-slate-500">اقرأ المصطلحات وأمثلتها جيداً قبل الانتقال للبطاقات أو الاختبار.</p>
+            </div>
+            <div id="study-container" class="space-y-8">
+                <!-- Content will be injected here by JS -->
+            </div>
+        </section>
+
+        <!-- SECTION 2: FLASHCARDS -->
+        <section id="section-flashcards" class="animate-fade-in hidden">
+            <div class="text-center mb-6">
+                <h2 class="text-3xl font-bold text-secondary mb-2">البطاقات التعليمية (Flashcards)</h2>
+                <p class="text-slate-500">انقر على البطاقة لقلبها ومعرفة المعنى والمثال.</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto">
+                <!-- Progress -->
+                <div class="flex justify-between items-center mb-4 text-sm font-semibold text-slate-500">
+                    <span id="fc-category" class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">القسم</span>
+                    <span id="fc-progress">1 / 30</span>
+                </div>
+
+                <!-- Flashcard -->
+                <div class="w-full h-80 perspective-1000 cursor-pointer group" onclick="flipCard()">
+                    <div id="flashcard-inner" class="relative w-full h-full card-transition transform-style-3d shadow-xl rounded-2xl">
+                        
+                        <!-- Front of card (Term) -->
+                        <div class="absolute w-full h-full backface-hidden bg-white border-b-4 border-primary rounded-2xl flex flex-col items-center justify-center p-6 text-center">
+                            <span class="text-slate-400 text-sm mb-4">المصطلح (اضغط للقلب)</span>
+                            <h3 id="fc-term" class="text-4xl md:text-5xl font-bold text-slate-800 mb-2" dir="ltr"></h3>
+                        </div>
+
+                        <!-- Back of card (Meaning & Example) -->
+                        <div class="absolute w-full h-full backface-hidden bg-emerald-50 border-t-4 border-accent rounded-2xl flex flex-col items-center justify-center p-6 text-center rotate-y-180 overflow-y-auto">
+                            <h4 id="fc-meaning-ar" class="text-3xl font-bold text-secondary mb-1"></h4>
+                            <p id="fc-meaning-en" class="text-lg text-slate-500 mb-4" dir="ltr"></p>
+                            
+                            <div class="bg-white p-4 rounded-lg shadow-sm w-full border border-emerald-100 mb-2">
+                                <p id="fc-explanation" class="text-sm md:text-base text-slate-700 leading-relaxed"></p>
+                            </div>
+                            <div class="bg-amber-50 p-3 rounded-lg shadow-sm w-full border border-amber-100 text-right">
+                                <span class="font-bold text-amber-700 text-sm">مثال: </span>
+                                <p id="fc-example" class="text-sm text-slate-700 inline"></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex justify-between items-center mt-8 gap-4">
+                    <button onclick="prevCard()" class="px-6 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-primary transition font-bold flex-1 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-arrow-right"></i> السابق
+                    </button>
+                    <button onclick="shuffleCards()" class="w-12 h-12 bg-slate-100 text-slate-600 rounded-full hover:bg-emerald-100 hover:text-emerald-700 transition flex justify-center items-center" title="خلط البطاقات">
+                        <i class="fa-solid fa-shuffle"></i>
+                    </button>
+                    <button onclick="nextCard()" class="px-6 py-3 bg-primary text-white shadow-md rounded-lg hover:bg-secondary transition font-bold flex-1 flex justify-center items-center gap-2">
+                        التالي <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: QUIZ -->
+        <section id="section-quiz" class="animate-fade-in hidden">
+            <div class="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+                
+                <!-- Quiz Intro -->
+                <div id="quiz-intro" class="p-10 text-center">
+                    <i class="fa-solid fa-graduation-cap text-6xl text-primary mb-4"></i>
+                    <h2 class="text-3xl font-bold text-secondary mb-4">اختبر معلوماتك</h2>
+                    <p class="text-slate-600 mb-8 leading-relaxed">سيتم عرض أسئلة عشوائية من المصطلحات التي درستها. تتنوع الأسئلة بين اختيار المعنى الصحيح أو تحديد الكلمة المناسبة للوصف. هل أنت مستعد؟</p>
+                    <button onclick="startQuiz()" class="bg-primary hover:bg-secondary text-white font-bold py-3 px-10 rounded-full text-lg shadow-lg transition transform hover:scale-105">
+                        ابدأ الاختبار الآن
+                    </button>
+                </div>
+
+                <!-- Quiz Active -->
+                <div id="quiz-active" class="hidden flex flex-col h-full">
+                    <div class="bg-slate-50 p-4 border-b flex justify-between items-center">
+                        <div class="text-sm font-bold text-slate-500">السؤال: <span id="quiz-current-num" class="text-primary text-lg">1</span> / 10</div>
+                        <div class="text-sm font-bold text-slate-500">النتيجة: <span id="quiz-score" class="text-accent text-lg">0</span></div>
+                    </div>
+                    
+                    <div class="p-8 flex-grow">
+                        <h3 id="quiz-question" class="text-2xl font-bold text-slate-800 mb-8 text-center leading-relaxed"></h3>
+                        
+                        <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Options injected by JS -->
+                        </div>
+                    </div>
+
+                    <div id="quiz-feedback" class="hidden p-4 text-center font-bold text-lg animate-pulse"></div>
+                    
+                    <div class="p-4 bg-slate-50 border-t text-left">
+                        <button id="quiz-next-btn" onclick="nextQuizQuestion()" class="hidden bg-secondary hover:bg-emerald-800 text-white font-bold py-2 px-8 rounded-lg transition">
+                            السؤال التالي <i class="fa-solid fa-arrow-left mr-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quiz Results -->
+                <div id="quiz-results" class="hidden p-10 text-center">
+                    <div id="quiz-medal" class="text-7xl mb-4"></div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-2">انتهى الاختبار!</h2>
+                    <p class="text-lg text-slate-600 mb-6">لقد حصلت على <span id="quiz-final-score" class="text-2xl font-bold text-primary"></span> من 10</p>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="startQuiz()" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-lg transition">
+                            <i class="fa-solid fa-rotate-right ml-2"></i> إعادة الاختبار
+                        </button>
+                        <button onclick="switchTab('study')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2 px-6 rounded-lg transition">
+                            <i class="fa-solid fa-book ml-2"></i> العودة للمراجعة
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 text-center py-6 mt-8">
+        <p>تم التصميم خصيصاً لمساعدتك في اجتياز اختبار المصطلحات العلمية بنجاح 🎓</p>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- 1. DATA ---
+        const termsData = [
+            {
+                category: "الألوان والصفات الشكلية (Colors and Appearances)",
+                items: [
+                    { term: "Alba", ar: "أبيض", en: "White", exp: "تُستخدم هذه الكلمة كصفة في الاسم العلمي للإشارة إلى أن أزهار أو أوراق النبات بيضاء اللون.", ex: "Rosa alba (الوردة البيضاء)." },
+                    { term: "Coccinea / Rubra / Punica", ar: "أحمر", en: "Red", exp: "تصف النباتات ذات الأزهار الحمراء الزاهية أو الأوراق المائلة للحمرة.", ex: "Quercus rubra (البلوط الأحمر) / Punica granatum (الرمان)." },
+                    { term: "Sanguinea", ar: "أحمر دموي", en: "Blood red", exp: "تُشير إلى لون أحمر داكن يشبه لون الدم.", ex: "Geranium sanguineum (إبرة الراعي الدموية)." },
+                    { term: "Azurea", ar: "أزرق", en: "Blue", exp: "تصف النباتات ذات اللون الأزرق السماوي الصافي.", ex: "Salvia azurea (المريمية الزرقاء)." },
+                    { term: "Lutea / Flava", ar: "أصفر", en: "Yellow", exp: "تستخدم لوصف اللون الأصفر في النبات (أزهار أو جذور).", ex: "Gentiana lutea (الجنطيانا الصفراء)." },
+                    { term: "Glabrous / Glabra", ar: "أملس / بدون شعيرات", en: "Without hairs / smooth", exp: "مصطلح يصف سطح الورقة أو الساق عندما يكون أملساً تماماً ولا يحتوي على أي زغب أو شعيرات.", ex: "أوراق نبات الليمون تُعتبر Glabrous." },
+                    { term: "Villosa / Hirsute", ar: "مُشعر / مغطى بشعيرات", en: "Hairy / coarse hairs", exp: "عكس أملس، يصف النباتات التي يغطي أوراقها أو ساقها شعيرات دقيقة قد تكون ناعمة (Villosa) أو خشنة (Hirsute).", ex: "أوراق نبات النعناع البري مغطاة بشعيرات." },
+                    { term: "Acaulis", ar: "بدون ساق", en: "Stemless", exp: "يطلق على النباتات التي تنمو أوراقها مباشرة من الجذر أو تكون ساقها قصيرة جداً.", ex: "Primula vulgaris (زهرة الربيع عديمة الساق)." },
+                    { term: "Esculenta", ar: "صالح للأكل", en: "Edible", exp: "صفة تضاف للنباتات التي يمكن للإنسان أن يأكلها.", ex: "Colocasia esculenta (نبات القلقاس)." },
+                    { term: "Pendula", ar: "متدلٍ أو معلق", en: "Hanging", exp: "تصف الفروع أو الأزهار التي تنمو متجهة نحو الأسفل.", ex: "Betula pendula (شجرة البتولا متدلية الأفرع)." }
+                ]
+            },
+            {
+                category: "الحجم وشكل الأوراق (Size and Leaf Shapes)",
+                items: [
+                    { term: "Pumila / Nana", ar: "صغير الحجم / قزم", en: "Small / tiny", exp: "تصف الأصناف القزمية أو الصغيرة جداً من النباتات مقارنة بفصيلتها.", ex: "Pinus mugo var. pumila (صنوبر قزم)." },
+                    { term: "Micrantha / Parviflora", ar: "صغير الأزهار", en: "Small flowered", exp: "نباتات تتميز بإنتاج أزهار صغيرة الحجم.", ex: "Rosa parviflora (ورد صغير الأزهار)." },
+                    { term: "Macrantha", ar: "كبير الأزهار", en: "Large flowered", exp: "عكس صغير الأزهار، تصف النباتات التي تُنتج أزهاراً ضخمة وملفتة.", ex: "Magnolia macrantha (ماغنوليا كبيرة الأزهار)." },
+                    { term: "Reniform", ar: "على شكل كِلية", en: "Kidney-shaped", exp: "يصف شكل نصل الورقة عندما يشبه الكلية البشرية.", ex: "أوراق نبات الجيرانيوم شكلها Reniform." },
+                    { term: "Deltoid", ar: "مثلثة الشكل", en: "Triangular shaped", exp: "ورقة تشبه في شكلها المثلث أو الحرف اليوناني دلتا.", ex: "أوراق شجرة الحور." },
+                    { term: "Hastate", ar: "على شكل رأس الرمح", en: "Spearhead shaped", exp: "ورقة لها قاعدة عريضة بفصين مدببين يمتدان للخارج.", ex: "أوراق السبانخ شكلها Hastate." }
+                ]
+            },
+            {
+                category: "أماكن النمو (Habitats)",
+                items: [
+                    { term: "Palustris", ar: "ينمو في المستنقعات", en: "From marshes", exp: "نباتات تفضل البيئات الرطبة جداً والمستنقعات المائية.", ex: "Caltha palustris (نبات الكالتا المحب للمستنقعات)." },
+                    { term: "Maritima", ar: "ينمو بالقرب من البحر", en: "Near the sea", exp: "نباتات ساحلية تتحمل الملوحة ورذاذ البحر.", ex: "Armeria maritima (نبات أرميريا الساحلي)." },
+                    { term: "Montana", ar: "ينمو في الجبال", en: "From mountains", exp: "نباتات تنمو في المرتفعات الجبلية وتتحمل البرد.", ex: "Pinus montana (الصنوبر الجبلي)." },
+                    { term: "Japonica", ar: "من اليابان", en: "From Japan", exp: "تُشير إلى أن الموطن الأصلي لهذا النبات هو اليابان.", ex: "Camellia japonica (زهرة الكاميليا اليابانية)." },
+                    { term: "Sibirica", ar: "من سيبيريا", en: "From Siberia", exp: "نباتات موطنها منطقة سيبيريا الباردة.", ex: "Iris sibirica (سوسنة سيبيريا)." }
+                ]
+            },
+            {
+                category: "تشريح النبات والعمليات الحيوية (Anatomy & Processes)",
+                items: [
+                    { term: "Stamen", ar: "السداة (العضو الذكري)", en: "Male reproductive organ", exp: "العضو الذكري في الزهرة، يتكون من خيط دقيق يحمل المتك.", ex: "تنتقل حبوب اللقاح من الـ Stamen إلى العضو الأنثوي." },
+                    { term: "Anther", ar: "المُتك", en: "Pollen producing organ", exp: "الجزء المنتفخ في أعلى العضو الذكري ووظيفته إنتاج حبوب اللقاح.", ex: "يعلق الغبار الأصفر (اللقاح) في إصبعك عند لمس الـ Anther." },
+                    { term: "Carpel / Ovary", ar: "الكربلة / المبيض", en: "Female organ / Ovary", exp: "العضو الأنثوي، وبعد عملية التلقيح ينتفخ هذا المبيض ويتحول إلى ثمرة.", ex: "ثمرة التفاح هي في الأصل Ovary منتفخ." },
+                    { term: "Petiole", ar: "عنق الورقة", en: "Leaf stalk", exp: "الساق الرفيعة التي تربط نصل الورقة بالساق الرئيسي.", ex: "عنق أوراق الكرفس (Petiole) هو الجزء الذي نقوم بأكله." },
+                    { term: "Rhizome", ar: "الرايزوم (جذمور)", en: "Root-like stem", exp: "ساق تنمو أفقياً تحت الأرض، تُخرج أوراقاً وجذوراً وتخزن الغذاء.", ex: "الزنجبيل والكركم أمثلة على الـ Rhizomes." },
+                    { term: "Stomata", ar: "الثغور", en: "Tiny pores", exp: "مسامات صغيرة جداً على سطح الأوراق تسمح بتبادل الغازات وخروج بخار الماء.", ex: "تغلق النباتات الصحراوية الـ Stomata نهاراً لتقليل فقد الماء." },
+                    { term: "Xylem", ar: "نسيج الخشب", en: "Conducts water", exp: "أنابيب تنقل الماء والمعادن من الجذور إلى الأوراق.", ex: "يعمل الـ Xylem مثل أنابيب المياه لتغذية النبات بالماء." },
+                    { term: "Phloem", ar: "نسيج اللحاء", en: "Transports nutrients", exp: "أنابيب تنقل الغذاء والسكر المصنوع في الأوراق إلى باقي أجزاء النبات.", ex: "حشرات المن تمتص العصارة من الـ Phloem." },
+                    { term: "Annual", ar: "نبات حولي", en: "One growing season", exp: "نبات يكمل دورة حياته خلال سنة واحدة أو موسم واحد.", ex: "الطماطم والقمح من النباتات الحولية (Annuals)." },
+                    { term: "Biennial", ar: "نبات ثنائي الحول", en: "Two-year cycle", exp: "نبات يحتاج لموسمين لإكمال حياته، ينمو خضرياً بالعام الأول ويزهر بالثاني.", ex: "الجزر والبصل أمثلة على الـ Biennials." },
+                    { term: "Photosynthesis", ar: "البناء الضوئي", en: "Making food process", exp: "عملية حيوية يقوم فيها النبات بصنع غذائه باستخدام طاقة الشمس وثاني أكسيد الكربون.", ex: "البناء الضوئي يوفر الأكسجين والغذاء على الأرض." }
+                ]
+            },
+            {
+                category: "السوابق واللواحق الإنجليزية (Prefixes & Suffixes)",
+                items: [
+                    { term: "Poly-", ar: "عديد / كثير", en: "Many", exp: "سابقة توضع في البداية لتعني التعدد.", ex: "Polygon (مضلع) / Polyunsaturated." },
+                    { term: "Micro-", ar: "صغير جداً / دقيق", en: "Small", exp: "سابقة تعني أن الشيء متناهي الصغر ولا يرى بالعين.", ex: "Microscope (مجهر) / Microorganism." },
+                    { term: "Mono-", ar: "واحد / أحادي", en: "One", exp: "سابقة تشير إلى شيء مفرد أو ذو جزء واحد.", ex: "Monocot (ذوات الفلقة الواحدة)." },
+                    { term: "Re-", ar: "إعادة / مرة أخرى", en: "Again", exp: "تضاف للفعل لتدل على تكراره أو إعادته.", ex: "Rewrite (إعادة كتابة) / Reproduce." },
+                    { term: "Un- / Dis-", ar: "لا / عكس المعنى", en: "Not / Opposite", exp: "سوابق تستخدم لنفي الكلمة أو إعطاء المضاد.", ex: "Agree -> Disagree / Known -> Unknown." },
+                    { term: "-less", ar: "بدون / عديم", en: "Without", exp: "لاحقة توضع في النهاية لتعني غياب الشيء.", ex: "Stemless (بدون ساق) / Harmless." },
+                    { term: "-ous", ar: "يحول الاسم لصفة", en: "Adjective suffix", exp: "لاحقة تجعل الكلمة صفة.", ex: "Poison (سم) -> Poisonous (سام)." },
+                    { term: "-ion", ar: "يحول الفعل لاسم", en: "Noun suffix", exp: "لاحقة تحول الفعل إلى اسم.", ex: "Educate -> Education." }
+                ]
+            },
+            {
+                category: "المترادفات والمتضادات الهامة (Synonyms & Antonyms)",
+                items: [
+                    { term: "Aromatic = Fragrant", ar: "عطري / ذو رائحة طيبة", en: "Having a pleasant smell", exp: "مترادفات تصف النباتات ذات الروائح الفواحة.", ex: "اللافندر من النباتات العطرية." },
+                    { term: "Huge X Tiny", ar: "ضخم (عكسها) صغير جداً", en: "Very large X Very small", exp: "متضادات تعبر عن طرفي الحجم.", ex: "بذور السحلب (Tiny) بينما شجرة السيكويا (Huge)." },
+                    { term: "Rude X Polite", ar: "وقح (عكسها) مهذب", en: "Impolite X Courteous", exp: "متضادات تصف السلوك.", ex: "He answered in a rude (impolite) way." },
+                    { term: "Accomplish = Achieve", ar: "يُنجز / يحقق", en: "To complete successfully", exp: "مترادفات تعني إتمام مهمة بنجاح.", ex: "The plant accomplished its life cycle." }
+                ]
+            }
+        ];
+
+        let allTerms = [];
+        termsData.forEach(cat => {
+            cat.items.forEach(item => {
+                allTerms.push({ ...item, categoryName: cat.category });
+            });
+        });
+
+        // --- 2. NAVIGATION LOGIC ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-secondary', 'shadow', 'scale-105');
+                btn.classList.add('text-emerald-100');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.remove('text-emerald-100');
+            activeBtn.classList.add('bg-white', 'text-secondary', 'shadow', 'scale-105');
+
+            document.getElementById('section-study').classList.add('hidden');
+            document.getElementById('section-flashcards').classList.add('hidden');
+            document.getElementById('section-quiz').classList.add('hidden');
+            
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            document.getElementById(`section-${tabId}`).classList.add('block');
+        }
+
+        // --- 3. RENDER STUDY LIST ---
+        function renderStudyList() {
+            const container = document.getElementById('study-container');
+            let html = '';
+            
+            termsData.forEach((cat, index) => {
+                html += `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-100">
+                    <div class="bg-emerald-50 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
+                        <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">${index + 1}</span>
+                        <h3 class="text-xl font-bold text-secondary">${cat.category}</h3>
+                    </div>
+                    <div class="p-0">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right">
+                                <thead>
+                                    <tr class="bg-slate-50 text-slate-500 text-sm border-b">
+                                        <th class="px-6 py-3 font-bold w-1/4">المصطلح</th>
+                                        <th class="px-6 py-3 font-bold w-1/6">المعنى</th>
+                                        <th class="px-6 py-3 font-bold w-1/3">الشرح</th>
+                                        <th class="px-6 py-3 font-bold">مثال توضيحي</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">`;
+                
+                cat.items.forEach(item => {
+                    html += `
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="px-6 py-4 font-bold text-primary font-mono" dir="ltr">${item.term}</td>
+                                        <td class="px-6 py-4 font-bold text-slate-700">${item.ar}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600 leading-relaxed">${item.exp}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-500 bg-amber-50/30 italic">${item.ex}</td>
+                                    </tr>`;
+                });
+
+                html += `       </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- 4. FLASHCARDS LOGIC ---
+        let currentCardIndex = 0;
+        let isFlipped = false;
+        let flashcardsArray = [...allTerms];
+
+        function loadFlashcard() {
+            const card = flashcardsArray[currentCardIndex];
+            document.getElementById('fc-term').innerText = card.term;
+            document.getElementById('fc-meaning-ar').innerText = card.ar;
+            document.getElementById('fc-meaning-en').innerText = card.en;
+            document.getElementById('fc-explanation').innerText = card.exp;
+            document.getElementById('fc-example').innerText = card.ex;
+            
+            let catName = card.categoryName.split('(')[0].trim();
+            document.getElementById('fc-category').innerText = catName;
+            document.getElementById('fc-progress').innerText = `${currentCardIndex + 1} / ${flashcardsArray.length}`;
+
+            if(isFlipped) {
+                document.getElementById('flashcard-inner').classList.remove('rotate-y-180');
+                isFlipped = false;
+            }
+        }
+
+        function flipCard() {
+            const inner = document.getElementById('flashcard-inner');
+            if (isFlipped) {
+                inner.classList.remove('rotate-y-180');
+            } else {
+                inner.classList.add('rotate-y-180');
+            }
+            isFlipped = !isFlipped;
+        }
+
+        function nextCard() {
+            if (currentCardIndex < flashcardsArray.length - 1) {
+                currentCardIndex++;
+                loadFlashcard();
+            } else {
+                currentCardIndex = 0;
+                loadFlashcard();
+            }
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                loadFlashcard();
+            }
+        }
+
+        function shuffleCards() {
+            for (let i = flashcardsArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [flashcardsArray[i], flashcardsArray[j]] = [flashcardsArray[j], flashcardsArray[i]];
+            }
+            currentCardIndex = 0;
+            loadFlashcard();
+        }
+
+        // --- 5. QUIZ LOGIC ---
+        let quizQuestions = [];
+        let currentQIndex = 0;
+        let score = 0;
+        const TOTAL_QUIZ_QUESTIONS = 10;
+
+        function generateQuizData() {
+            quizQuestions = [];
+            let pool = [...allTerms];
+            
+            pool = pool.sort(() => 0.5 - Math.random());
+            
+            for(let i=0; i < Math.min(TOTAL_QUIZ_QUESTIONS, pool.length); i++) {
+                let target = pool[i];
+                let isTermQuestion = Math.random() > 0.5;
+                
+                let questionText, correctAns, wrongPool;
+                
+                if (isTermQuestion) {
+                    questionText = `ما المعنى الصحيح لمصطلح "${target.term}"؟`;
+                    correctAns = target.ar;
+                    wrongPool = allTerms.filter(t => t.ar !== target.ar).map(t => t.ar);
+                } else {
+                    questionText = `أي من المصطلحات التالية يعني "${target.ar}"؟`;
+                    correctAns = target.term;
+                    wrongPool = allTerms.filter(t => t.term !== target.term).map(t => t.term);
+                }
+
+                wrongPool = wrongPool.sort(() => 0.5 - Math.random()).slice(0, 3);
+                let options = [correctAns, ...wrongPool].sort(() => 0.5 - Math.random());
+                
+                quizQuestions.push({
+                    q: questionText,
+                    options: options,
+                    answer: correctAns,
+                    exp: target.exp
+                });
+            }
+        }
+
+        function startQuiz() {
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            document.getElementById('quiz-active').classList.remove('hidden');
+            
+            generateQuizData();
+            currentQIndex = 0;
+            score = 0;
+            updateQuizUI();
+            loadQuizQuestion();
+        }
+
+        function updateQuizUI() {
+            document.getElementById('quiz-current-num').innerText = currentQIndex + 1;
+            document.getElementById('quiz-score').innerText = score;
+        }
+
+        function loadQuizQuestion() {
+            document.getElementById('quiz-next-btn').classList.add('hidden');
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            
+            const qData = quizQuestions[currentQIndex];
+            document.getElementById('quiz-question').innerText = qData.q;
+            
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+            
+            qData.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "quiz-opt-btn w-full p-4 text-center md:text-lg font-bold bg-white border-2 border-slate-200 text-slate-700 rounded-xl hover:bg-emerald-50 hover:border-emerald-300 transition shadow-sm";
+                if(/^[a-zA-Z]/.test(opt)) {
+                    btn.setAttribute('dir', 'ltr');
+                }
+                btn.innerText = opt;
+                btn.onclick = () => handleAnswer(opt, qData.answer, qData.exp, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected, correct, explanation, btnElement) {
+            const buttons = document.querySelectorAll('.quiz-opt-btn');
+            buttons.forEach(b => {
+                b.onclick = null;
+                b.classList.remove('hover:bg-emerald-50', 'hover:border-emerald-300');
+                if(b.innerText === correct) {
+                    b.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                }
+            });
+
+            const feedbackEl = document.getElementById('quiz-feedback');
+            feedbackEl.classList.remove('hidden', 'text-green-600', 'text-red-600');
+
+            if (selected === correct) {
+                score++;
+                btnElement.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                feedbackEl.innerText = "إجابة صحيحة! 🎉";
+                feedbackEl.classList.add('text-green-600');
+            } else {
+                btnElement.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                feedbackEl.innerText = "إجابة خاطئة! ❌";
+                feedbackEl.classList.add('text-red-600');
+            }
+            
+            feedbackEl.innerHTML += `<div class="text-sm text-slate-500 mt-2 font-normal">${explanation}</div>`;
+            updateQuizUI();
+            document.getElementById('quiz-next-btn').classList.remove('hidden');
+        }
+
+        function nextQuizQuestion() {
+            currentQIndex++;
+            if (currentQIndex < quizQuestions.length) {
+                updateQuizUI();
+                loadQuizQuestion();
+            } else {
+                showQuizResults();
+            }
+        }
+
+        function showQuizResults() {
+            document.getElementById('quiz-active').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            document.getElementById('quiz-final-score').innerText = score;
+            
+            const medalEl = document.getElementById('quiz-medal');
+            if(score >= 9) {
+                medalEl.innerHTML = '🏆';
+                medalEl.className = "text-7xl mb-4 text-yellow-500 drop-shadow-md animate-bounce";
+            } else if(score >= 6) {
+                medalEl.innerHTML = '👍';
+                medalEl.className = "text-7xl mb-4 text-blue-500 drop-shadow-md";
+            } else {
+                medalEl.innerHTML = '📚';
+                medalEl.className = "text-7xl mb-4 text-slate-500";
+            }
+        }
+
+        window.onload = () => {
+            renderStudyList();
+            loadFlashcard();
+        };
+
+    </script>
+</body>
+</html>
