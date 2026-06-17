@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌤️ Weather Dashboard</h1>
+            <p class="subtitle">Real-time weather information</p>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="cityInput" 
+                    placeholder="Enter city name..." 
+                    class="search-input"
+                >
+                <button id="searchBtn" class="search-btn">Search</button>
+                <button id="locationBtn" class="location-btn" title="Use current location">📍</button>
+            </div>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <!-- Current Weather -->
+        <div id="currentWeather" class="weather-card hidden">
+            <div class="city-info">
+                <h2 id="cityName"></h2>
+                <p id="date" class="date"></p>
+            </div>
+            <div class="weather-main">
+                <div class="temp-section">
+                    <span id="temperature" class="temperature"></span>
+                    <div class="weather-description">
+                        <img id="weatherIcon" src="" alt="Weather icon" class="weather-icon">
+                        <span id="description"></span>
+                    </div>
+                </div>
+                <div class="weather-details-grid">
+                    <div class="weather-detail">
+                        <span class="label">Feels Like</span>
+                        <span id="feelsLike" class="value"></span>
+                    </div>
+                    <div class="weather-detail">
+                        <span class="label">Humidity</span>
+                        <span id="humidity" class="value"></span>
+                    </div>
+                    <div class="weather-detail">
+                        <span class="label">Wind Speed</span>
+                        <span id="windSpeed" class="value"></span>
+                    </div>
+                    <div class="weather-detail">
+                        <span class="label">Pressure</span>
+                        <span id="pressure" class="value"></span>
+                    </div>
+                    <div class="weather-detail">
+                        <span class="label">Visibility</span>
+                        <span id="visibility" class="value"></span>
+                    </div>
+                    <div class="weather-detail">
+                        <span class="label">UV Index</span>
+                        <span id="uvIndex" class="value"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5-Day Forecast -->
+        <div id="forecastSection" class="forecast-section hidden">
+            <h3>5-Day Forecast</h3>
+            <div id="forecastContainer" class="forecast-grid"></div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Loading weather data...</p>
+        </div>
+
+        <!-- Welcome Message -->
+        <div id="welcome" class="welcome-message">
+            <h3>Welcome to Weather Dashboard</h3>
+            <p>Search for a city or allow location access to get started!</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Data provided by <a href="https://openweathermap.org/" target="_blank">OpenWeatherMap API</a></p>
+        <p>© 2024 Weather Dashboard. Built with ❤️</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
