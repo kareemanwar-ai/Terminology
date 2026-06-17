@@ -125,7 +125,12 @@
                         <!-- Front of card (Term) -->
                         <div class="absolute w-full h-full backface-hidden bg-white border-b-4 border-primary rounded-2xl flex flex-col items-center justify-center p-6 text-center">
                             <span class="text-slate-400 text-sm mb-4">المصطلح (اضغط للقلب)</span>
-                            <h3 id="fc-term" class="text-4xl md:text-5xl font-bold text-slate-800 mb-2" dir="ltr"></h3>
+                            <div class="flex items-center justify-center gap-4 mb-2 relative z-10">
+                                <h3 id="fc-term" class="text-4xl md:text-5xl font-bold text-slate-800" dir="ltr"></h3>
+                                <button id="fc-speak-btn" class="text-slate-300 hover:text-primary text-2xl md:text-3xl transition p-2 rounded-full hover:bg-slate-50" title="استمع للنطق">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Back of card (Meaning & Example) -->
@@ -355,7 +360,14 @@
                 cat.items.forEach(item => {
                     html += `
                                     <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-4 font-bold text-primary font-mono" dir="ltr">${item.term}</td>
+                                        <td class="px-6 py-4 font-bold text-primary font-mono" dir="ltr">
+                                            <div class="flex items-center justify-end gap-3">
+                                                <span>${item.term}</span>
+                                                <button onclick="playPronunciation(event, '${item.term}')" class="text-slate-400 hover:text-primary transition p-1" title="استمع للنطق">
+                                                    <i class="fa-solid fa-volume-high"></i>
+                                                </button>
+                                            </div>
+                                        </td>
                                         <td class="px-6 py-4 font-bold text-slate-700">${item.ar}</td>
                                         <td class="px-6 py-4 text-sm text-slate-600 leading-relaxed">${item.exp}</td>
                                         <td class="px-6 py-4 text-sm text-slate-500 bg-amber-50/30 italic">${item.ex}</td>
@@ -383,6 +395,9 @@
             document.getElementById('fc-meaning-en').innerText = card.en;
             document.getElementById('fc-explanation').innerText = card.exp;
             document.getElementById('fc-example').innerText = card.ex;
+            
+            // ربط زر النطق بالمصطلح الحالي
+            document.getElementById('fc-speak-btn').onclick = (e) => playPronunciation(e, card.term);
             
             let catName = card.categoryName.split('(')[0].trim();
             document.getElementById('fc-category').innerText = catName;
@@ -563,6 +578,28 @@
             } else {
                 medalEl.innerHTML = '📚';
                 medalEl.className = "text-7xl mb-4 text-slate-500";
+            }
+        }
+
+        // --- 6. PRONUNCIATION LOGIC (Text-to-Speech) ---
+        function playPronunciation(event, text) {
+            // منع الحدث من التأثير على العناصر الأب (لمنع البطاقة من الانقلاب عند الضغط على الصوت)
+            if(event) event.stopPropagation();
+
+            if ('speechSynthesis' in window) {
+                // إيقاف أي نطق سابق قيد التشغيل
+                window.speechSynthesis.cancel();
+                
+                // استبدال الشرطة المائلة بفاصلة حتى يتوقف المتحدث قليلاً بين الكلمات بدلاً من نطق كلمة "سلاش"
+                const cleanText = text.split('/').join(',');
+                
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'en-US'; // ضبط اللغة للإنجليزية (تعمل جيداً مع المصطلحات اللاتينية والإنجليزية)
+                utterance.rate = 0.85;    // إبطاء سرعة النطق قليلاً ليكون أوضح للتعلم
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("عذراً، متصفحك الحالي لا يدعم خاصية نطق الكلمات.");
             }
         }
 
